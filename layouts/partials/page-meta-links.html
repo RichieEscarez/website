@@ -1,5 +1,5 @@
-{{/* Show only on production site (not local builds since we can't determine version) */}}
-{{ if not .Site.IsServer }}
+{{/* Dynamically determine the version and in what section of the docs each page belongs */}}
+
 {{ $prerelease := .Site.Params.prereleasefolder }}
 {{ if .Path }}
   {{/* Set default values */}}
@@ -42,6 +42,11 @@
 
   {{ if ($.Scratch.Get "gh_repo") }}
   <div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+    {{/* Docs contributor help - show everywhere else */}}
+    {{ if ne $pageSection "authoring" }}
+    <a href="/authoring/" target="_blank" rel="noopener noreferrer"><i class="fa fa-book fa-fw"></i> Docs contributor help</a>
+    {{ end }}
+
     {{/* Show different links for each website section */}}
     {{ if ne $pageSection "blog" }}
 
@@ -51,12 +56,18 @@
       {{ $.Scratch.Set "gh_repo" ($.Param "github_communityrepo") }}
     {{ end }}
 
+    {{/* Edit in GitHub - Show only on production site */}}
+    {{ if not .Site.IsServer }}
     {{ $editURL := printf "%s/tree/%s/%s" ($.Scratch.Get "gh_repo") ($.Scratch.Get "gh_branch") ($.Scratch.Get "filepath") }}
     <a href="{{ $editURL }}" target="_blank" rel="noopener noreferrer"><i class="fa fa-edit fa-fw"></i> {{ T "post_edit_this" }}</a>
+    {{ end }}
 
+    {{/* Open Issues */}}
+    {{/* Docs issues */}}
     {{ $issuesURL := printf "%s/issues/new?title=%s(%s)&labels=kind%2Fbug&template=bug-in-existing-docs.md" ($.Scratch.Get "gh_repo") (htmlEscape $.Title) (htmlEscape $.Path) }}
     <a href="{{ $issuesURL }}" target="_blank" rel="noopener noreferrer"><i class="fab fa-github fa-fw"></i> {{ T "post_create_issue" }}</a>
 
+    {{/* Code issues */}}
     {{/* Determine the Knative component */}}
     {{ if or (eq $pageSection "docs") (eq $pageSection .Site.Params.prereleasefolder) }}
       {{ if in (printf "%s" ($.Scratch.Get "filepath")) "/serving/" }}
@@ -71,7 +82,7 @@
       {{ end }}
     {{ end }}
 
-    {{/* BLOG section - Show Post link */}}
+    {{/* BLOG section - Dynamically show "Post to ... Blog" links */}}
     {{ else if (eq $pageSection "blog")}}
     {{ if eq .File.Dir "blog/" }}
     {{ $.Scratch.Set "blogsec" "Knative " }}
@@ -84,5 +95,4 @@
     {{ end }}
   </div>
   {{ end }}
-{{ end }}
 {{ end }}
